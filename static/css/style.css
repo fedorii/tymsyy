@@ -667,3 +667,11 @@ body {
 }
 
 .hidden { display: none !important; }
+
+@supports (height: 100dvh) {
+  .app-page,
+  .sidebar,
+  .chat-area {
+    height: 100dvh;
+  }
+}
