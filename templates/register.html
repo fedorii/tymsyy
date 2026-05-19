@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Регистрация — TYMCYY</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="auth-page">
+<div class="auth-container">
+  <div class="auth-logo">
+    <span class="logo-icon">◈</span>
+    <span class="logo-text">TYMCYY</span>
+  </div>
+  <h1 class="auth-title">Регистрация</h1>
+  {% if error %}
+  <div class="error-msg">{{ error }}</div>
+  {% endif %}
+  <form method="post" action="/register" class="auth-form">
+    <div class="field">
+      <label>Логин <span class="hint">(мин. 2 символа)</span></label>
+      <input type="text" name="username" required autocomplete="username" placeholder="придумайте_логин">
+    </div>
+    <div class="field">
+      <label>Пароль <span class="hint">(мин. 4 символа)</span></label>
+      <input type="password" name="password" required autocomplete="new-password" placeholder="••••••">
+    </div>
+    <button type="submit" class="btn-primary">Создать аккаунт</button>
+  </form>
+  <p class="auth-switch">Уже есть аккаунт? <a href="/login">Войти</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TYMCYY</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="app-page">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">TYMCYY</span>
+    </div>
+    <div class="sidebar-user">
+      <span class="user-badge">{{ current_user.username[0].upper() }}</span>
+      <span class="user-name">{{ current_user.username }}</span>
+      <a href="/logout" class="logout-btn" title="Выйти">⏻</a>
+    </div>
+  </div>
+
+  <div class="sidebar-actions">
+    <button class="action-btn" id="btnNewPrivate" title="Новый личный чат">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Личный чат
+    </button>
+    <button class="action-btn" id="btnNewGroup" title="Новый групповой чат">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Группа
+    </button>
+  </div>
+
+  <div class="chat-list" id="chatList">
+    {% if chats %}
+      {% for chat in chats %}
+      <div class="chat-item {% if loop.first %}active{% endif %}" data-id="{{ chat.id }}">
+        <div class="chat-avatar">{{ chat.title[0].upper() }}</div>
+        <div class="chat-info">
+          <div class="chat-name">{{ chat.title }}</div>
+          <div class="chat-preview">{{ chat.last_message or "Нет сообщений" }}</div>
+        </div>
+        {% if chat.is_group %}<span class="badge-group">группа</span>{% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-list">Нет чатов. Начните новый!</div>
+    {% endif %}
+  </div>
+</aside>
+
+<!-- ── Chat area ── -->
+<main class="chat-area" id="chatArea">
+  <div class="chat-placeholder" id="chatPlaceholder">
+    <div class="placeholder-icon">◈</div>
+    <p>Выберите чат</p>
+  </div>
+
+  <div class="chat-view hidden" id="chatView">
+    <div class="chat-topbar">
+      <button class="back-btn" id="backBtn">←</button>
+      <div class="topbar-info">
+        <div class="topbar-name" id="topbarName"></div>
+        <div class="topbar-sub" id="topbarSub"></div>
+      </div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="input-bar">
+      <textarea id="msgInput" placeholder="Сообщение..." rows="1"></textarea>
+      <button id="sendBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ── Modal: new private chat ── -->
+<div class="modal-overlay hidden" id="modalPrivate">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Новый личный чат</h2>
+      <button class="modal-close" data-modal="modalPrivate">✕</button>
+    </div>
+    <input type="text" id="searchUser" placeholder="Поиск пользователя..." class="modal-search">
+    <ul class="user-list" id="userList">
+      {% for u in users %}
+      <li class="user-item" data-id="{{ u.id }}">
+        <span class="user-badge">{{ u.username[0].upper() }}</span>
+        <span>{{ u.username }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<!-- ── Modal: new group chat ── -->
+<div class="modal-overlay hidden" id="modalGroup">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Новая группа</h2>
+      <button class="modal-close" data-modal="modalGroup">✕</button>
+    </div>
+    <input type="text" id="groupName" placeholder="Название группы" class="modal-search">
+    <p class="modal-label">Участники:</p>
+    <ul class="user-list" id="groupUserList">
+      {% for u in users %}
+      <li class="user-item selectable" data-id="{{ u.id }}">
+        <span class="user-badge">{{ u.username[0].upper() }}</span>
+        <span>{{ u.username }}</span>
+        <span class="check">✓</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <button class="btn-primary" id="createGroupBtn">Создать</button>
+  </div>
+</div>
+
+<script>
+const CURRENT_USER_ID = {{ current_user.id }};
+const TOKEN = "{{ request.cookies.get('token', '') }}";
+</script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
