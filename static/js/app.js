@@ -65,6 +65,7 @@ async function openChat(chatId) {
     if (!document.querySelector(`[data-msg-id="${msg.id}"]`)) {
       appendMessage(msg);
       scrollBottom();
+      refreshChatList();
     }
   };
   ws.onerror = () => console.warn('WS error');
