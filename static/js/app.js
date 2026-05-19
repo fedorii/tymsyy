@@ -210,15 +210,13 @@ function escapeHtml(str) {
 }
 
 async function refreshChatList() {
-  // reload page to refresh sidebar list
-  const r = await fetch('/chats');
+  const r = await fetch('/chats', { cache: 'no-store' });
   const html = await r.text();
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const newList = doc.getElementById('chatList');
   if (newList) {
     chatList.innerHTML = newList.innerHTML;
-    // rebind is automatic because we use event delegation
   }
 }
 
