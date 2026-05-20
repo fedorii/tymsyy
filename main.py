@@ -159,6 +159,29 @@ async def get_chat_info(chat_id: int, request: Request, db: Session = Depends(ge
     return {"id": chat.id, "title": title, "is_group": chat.is_group, "members": members}
 
 
+@app.delete("/api/messages/{message_id}")
+async def delete_message(message_id: int, request: Request, db: Session = Depends(get_db)):
+    user = await auth.get_current_user_from_cookie(request, db)
+    if not user:
+        raise HTTPException(status_code=401)
+    chat_id = crud.delete_message(db, message_id, user.id)
+    if chat_id is None:
+        raise HTTPException(status_code=403)
+    await manager.broadcast(chat_id, {"type": "delete_message", "id": message_id})
+    return {"ok": True}
+
+
+@app.delete("/api/chats/{chat_id}")
+async def delete_chat(chat_id: int, request: Request, db: Session = Depends(get_db)):
+    user = await auth.get_current_user_from_cookie(request, db)
+    if not user:
+        raise HTTPException(status_code=401)
+    if not crud.delete_chat(db, chat_id, user.id):
+        raise HTTPException(status_code=403)
+    await manager.broadcast(chat_id, {"type": "delete_chat", "chat_id": chat_id})
+    return {"ok": True}
+
+
 # ─── WebSocket ───────────────────────────────────────────────────────────────
 
 @app.websocket("/ws/{chat_id}/{token}")
@@ -179,6 +202,7 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: int, token: str, db:
                 continue
             msg = crud.save_message(db, chat_id, user_id, text)
             await manager.broadcast(chat_id, {
+                "type": "message",
                 "id": msg.id,
                 "text": msg.text,
                 "sender_id": user_id,

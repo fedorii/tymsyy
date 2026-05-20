@@ -474,6 +474,51 @@ body {
   border-bottom-left-radius: 4px;
 }
 
+/* delete chat button in topbar */
+.topbar-info { flex: 1; min-width: 0; }
+
+.delete-chat-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: .4rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color .15s, background .15s;
+}
+
+.delete-chat-btn:hover {
+  color: var(--danger);
+  background: rgba(240,96,96,.1);
+}
+
+/* message delete button */
+.msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: .35rem;
+}
+
+.msg-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: .2rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+}
+
+.msg:hover .msg-delete-btn { opacity: 1; }
+.msg-delete-btn:hover { color: var(--danger); }
+
 /* input bar */
 .input-bar {
   display: flex;

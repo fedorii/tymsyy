@@ -60,10 +60,18 @@ async function openChat(chatId) {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}/ws/${chatId}/${TOKEN}`);
   ws.onmessage = e => {
-    const msg = JSON.parse(e.data);
-    // avoid duplicates from history
-    if (!document.querySelector(`[data-msg-id="${msg.id}"]`)) {
-      appendMessage(msg);
+    const data = JSON.parse(e.data);
+    if (data.type === 'delete_message') {
+      document.querySelector(`[data-msg-id="${data.id}"]`)?.remove();
+      return;
+    }
+    if (data.type === 'delete_chat') {
+      handleChatDeleted(data.chat_id);
+      return;
+    }
+    // regular message (type === 'message' or legacy)
+    if (!document.querySelector(`[data-msg-id="${data.id}"]`)) {
+      appendMessage(data);
       scrollBottom();
       refreshChatList();
     }
@@ -81,9 +89,23 @@ function appendMessage(msg) {
   const time = new Date(msg.created_at).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'});
   const meta = mine ? time : `${msg.sender} · ${time}`;
 
+  const deleteBtn = mine
+    ? `<button class="msg-delete-btn" data-id="${msg.id}" title="Удалить сообщение">
+         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+           <polyline points="3 6 5 6 21 6"/>
+           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+           <path d="M10 11v6"/><path d="M14 11v6"/>
+           <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+         </svg>
+       </button>`
+    : '';
+
   div.innerHTML = `
     <div class="msg-meta">${meta}</div>
-    <div class="msg-bubble">${escapeHtml(msg.text)}</div>
+    <div class="msg-row">
+      ${deleteBtn}
+      <div class="msg-bubble">${escapeHtml(msg.text)}</div>
+    </div>
   `;
   messagesEl.appendChild(div);
 }
@@ -115,6 +137,39 @@ msgInput.addEventListener('input', () => {
   msgInput.style.height = 'auto';
   msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
 });
+
+/* ── Delete message ────────────────────────────────── */
+messagesEl.addEventListener('click', async e => {
+  const btn = e.target.closest('.msg-delete-btn');
+  if (!btn) return;
+  if (!confirm('Удалить это сообщение?')) return;
+  const id = Number(btn.dataset.id);
+  const ok = await apiFetch(`/api/messages/${id}`, {method: 'DELETE'});
+  if (ok) {
+    document.querySelector(`[data-msg-id="${id}"]`)?.remove();
+  }
+});
+
+/* ── Delete chat ───────────────────────────────────── */
+document.getElementById('deleteChatBtn').addEventListener('click', async () => {
+  if (!currentChatId) return;
+  const name = document.getElementById('topbarName').textContent;
+  if (!confirm(`Удалить чат «${name}»? Это действие необратимо.`)) return;
+  const ok = await apiFetch(`/api/chats/${currentChatId}`, {method: 'DELETE'});
+  if (ok) handleChatDeleted(currentChatId);
+});
+
+function handleChatDeleted(chatId) {
+  if (ws) { ws.close(); ws = null; }
+  currentChatId = null;
+  chatView.classList.add('hidden');
+  chatPlaceholder.classList.remove('hidden');
+  if (isMobile()) sidebar.classList.remove('hidden-mobile');
+  document.querySelector(`.chat-item[data-id="${chatId}"]`)?.remove();
+  if (!chatList.querySelector('.chat-item')) {
+    chatList.innerHTML = '<div class="empty-list">Нет чатов. Начните новый!</div>';
+  }
+}
 
 /* ── Back button (mobile) ──────────────────────────── */
 backBtn.addEventListener('click', () => {

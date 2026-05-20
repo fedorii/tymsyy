@@ -100,3 +100,24 @@ def save_message(db: Session, chat_id: int, sender_id: int, text: str):
     db.commit()
     db.refresh(msg)
     return msg
+
+
+def delete_message(db: Session, message_id: int, user_id: int):
+    """Returns chat_id on success, None if message not found or user is not the sender."""
+    msg = db.query(models.Message).filter(models.Message.id == message_id).first()
+    if not msg or msg.sender_id != user_id:
+        return None
+    chat_id = msg.chat_id
+    db.delete(msg)
+    db.commit()
+    return chat_id
+
+
+def delete_chat(db: Session, chat_id: int, user_id: int) -> bool:
+    if not is_member(db, chat_id, user_id):
+        return False
+    db.query(models.Message).filter(models.Message.chat_id == chat_id).delete()
+    db.query(models.ChatMember).filter(models.ChatMember.chat_id == chat_id).delete()
+    db.query(models.Chat).filter(models.Chat.id == chat_id).delete()
+    db.commit()
+    return True
